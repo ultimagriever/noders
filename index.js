@@ -1,8 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const User = require('./models/User');
-
 require('dotenv').config({ silent: true });
+const routes = require('./routes');
 
 const app = express();
 
@@ -20,56 +19,23 @@ mongoose.connect(process.env.MONGODB_URI)
 
 app.get('/', (req, res) => res.send('Hello World!'));
 
-app.post('/user/create', async (req, res, next) => {
-  try {
-    const newUser = new User();
-    newUser.email = req.body.email;
-    newUser.password = req.body.password;
-    await newUser.save();
-    res.json({ success: true, email: newUser.email });
-  } catch (err) {
-    next(err);
-  }
-});
-
-app.post('/user/login', async (req, res, next) => {
-  const existingUser = await User.findOne({ email: req.body.email });
-
-  if (!existingUser) {
-    req.err = 'auth';
-    return next({ error: 'User does not exist' });
-  }
-
-  existingUser.comparePassword(req.body.password, function (err, isMatch) {
-    if (err) {
-      return next(err);
-    }
-
-    if (!isMatch) {
-      req.err = 'auth';
-      return next({ error: 'Incorrect password' });
-    }
-
-    res.json({ login: true });
-  });
-
-});
+routes(app);
 
 app.use((err, req, res, next) => {
   console.error(err, err.stack);
   next(err);
 });
 
-// Authentication error handler
+// Status-specific error handler
 app.use((err, req, res, next) => {
-  if (req.err = 'auth') {
-    res.status(401).send('Unauthorized');
+  if (err.status) {
+    return res.status(err.status).send(err.message);
   } else {
     next(err);
   }
 });
 
-// Catch-all error handler
+// Catch-all error-handler
 app.use((err, req, res, next) => {
   res.status(500).send('Internal Server Error');
 });
