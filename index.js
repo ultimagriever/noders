@@ -4,7 +4,10 @@ const app = require('./app');
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('Successfully connected to MongoDB.');
-    app.listen(process.env.PORT || 8080, () => console.log('Express server listening on port 8080...'));
+    const server = app.listen(process.env.PORT || 8080, () => {
+      const { address, port } = server.address();
+      console.log(`Express server listening on https://${address}:${port}`)
+    });
   })
   .catch(err => {
     console.error(err.stack);
