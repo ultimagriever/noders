@@ -19,7 +19,7 @@ module.exports = {
         return next({ status: 422, message: 'E-mail and password are required!' });
       }
 
-      const existingUser = User.findOne({ email });
+      const existingUser = await User.findOne({ email });
 
       if (existingUser) {
         return next({ status: 422, message: 'E-mail address already in use' });
